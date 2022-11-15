@@ -155,27 +155,66 @@
 
     <div class="row">
       <div class="col">
-        <pre><code id="generated-code"><span class="hljs-keyword">import</span> java.io.IOException;
-<span class="hljs-keyword">import</span> java.io.InputStream;
-<span class="hljs-keyword">import</span> java.net.HttpURLConnection;
-<span class="hljs-keyword">import</span> java.net.URL;
-<span class="hljs-keyword">import</span> java.util.Scanner;
+        <pre><code id="generated-code"><span class="hljs-comment">//seed:{&quot;crawl_link&quot;:&quot;http://example.com&quot;}</span>
+    def <span class="hljs-title function_">getHeader</span><span class="hljs-params">()</span> {
+        Map&lt;String, String&gt; header = <span class="hljs-keyword">new</span> <span class="hljs-title class_">HashMap</span>&lt;String, String&gt;();
+    <span class="hljs-comment">/**
+     * 种子格式：
+     *{&quot;crawl_link&quot;:&quot;https://xxxxx&quot;}  ss
+     */</span>
+    <span class="hljs-meta">@SeedProcessor</span>
+    Request <span class="hljs-title function_">seedProcess</span><span class="hljs-params">(String seed)</span> {
+            <span class="hljs-type">JSONObject</span> <span class="hljs-variable">jsonObject</span> <span class="hljs-operator">=</span> JSONObject.parse(seed)
+            <span class="hljs-type">String</span> <span class="hljs-variable">url</span>  <span class="hljs-operator">=</span> jsonObject.get(<span class="hljs-string">&#x27;crawl_link&#x27;</span>)
+          <span class="hljs-type">Request</span> <span class="hljs-variable">request</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Request</span>(url, HttpRequestMethod.get, <span class="hljs-literal">null</span>, getHeader());
+        Map&lt;String, String&gt; map = <span class="hljs-keyword">new</span> <span class="hljs-title class_">HashMap</span>&lt;&gt;();
+        map.put(<span class="hljs-string">&quot;pageLevel&quot;</span>, <span class="hljs-string">&quot;seedProcess&quot;</span>);
+        map.put(<span class="hljs-string">&quot;seed&quot;</span>, seed);
+        request.setUrlContext(map);
+<span class="hljs-comment">//        request.setUrlContext(map); 开启浏览器模式</span>
+        <span class="hljs-keyword">return</span> request;
+    }
+    <span class="hljs-meta">@Override</span>
+    Result <span class="hljs-title function_">parse</span><span class="hljs-params">(Page page)</span> {
+          <span class="hljs-keyword">if</span> (page.getPageEncode() == <span class="hljs-literal">null</span>) {
+            page.pageEncode = <span class="hljs-string">&quot;utf-8&quot;</span>;
+        }
+        <span class="hljs-type">Result</span> <span class="hljs-variable">result</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Result</span>();
+        Map&lt;String, String&gt; extraMap = page?.request?.urlContext;
 
-<span class="hljs-keyword">class</span> <span class="hljs-title class_">Main</span> {
+        <span class="hljs-type">String</span> <span class="hljs-variable">pageLevel</span> <span class="hljs-operator">=</span> extraMap.get(<span class="hljs-string">&quot;pageLevel&quot;</span>);
+                <span class="hljs-keyword">if</span> (pageLevel == <span class="hljs-literal">null</span>) {
+            pageLevel = <span class="hljs-string">&quot;seedProcess&quot;</span>;
+        }
 
-	<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> IOException {
-		<span class="hljs-type">URL</span> <span class="hljs-variable">url</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">URL</span>(<span class="hljs-string">&quot;http://example.com&quot;</span>);
-		<span class="hljs-type">HttpURLConnection</span> <span class="hljs-variable">httpConn</span> <span class="hljs-operator">=</span> (HttpURLConnection) url.openConnection();
-		httpConn.setRequestMethod(<span class="hljs-string">&quot;GET&quot;</span>);
+        <span class="hljs-keyword">switch</span> (pageLevel) {
+        <span class="hljs-comment">// 解析列表</span>
+            <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;seedProcess&quot;</span>:
+                getRaw(page, result, extraMap);
+                <span class="hljs-keyword">break</span>;
+                }
+        <span class="hljs-keyword">return</span> result;
+    }
 
-		<span class="hljs-type">InputStream</span> <span class="hljs-variable">responseStream</span> <span class="hljs-operator">=</span> httpConn.getResponseCode() / <span class="hljs-number">100</span> == <span class="hljs-number">2</span>
-				? httpConn.getInputStream()
-				: httpConn.getErrorStream();
-		<span class="hljs-type">Scanner</span> <span class="hljs-variable">s</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Scanner</span>(responseStream).useDelimiter(<span class="hljs-string">&quot;\\A&quot;</span>);
-		<span class="hljs-type">String</span> <span class="hljs-variable">response</span> <span class="hljs-operator">=</span> s.hasNext() ? s.next() : <span class="hljs-string">&quot;&quot;</span>;
-		System.out.println(response);
+            def <span class="hljs-title function_">getRaw</span><span class="hljs-params">(Page page, Result result, Map&lt;String, String&gt; extraMap)</span> {
+        <span class="hljs-type">String</span> <span class="hljs-variable">page_str</span> <span class="hljs-operator">=</span> page.rawPage
+        String seed=extraMap.get(<span class="hljs-string">&quot;seed&quot;</span>)
+            Map&lt;String, String&gt; map = <span class="hljs-keyword">new</span> <span class="hljs-title class_">HashMap</span>&lt;&gt;();
+            map.put(MyField.seed,extraMap)
+            map.put(MyField.rawpage, page_str);
+            result.addDataMap(map);
+            <span class="hljs-keyword">return</span>
+           <span class="hljs-comment">// map.put(&quot;level&quot;, level);</span>
+
 	}
-}
+    <span class="hljs-meta">@FieldClass</span>
+    <span class="hljs-keyword">static</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">MyField</span> {
+        <span class="hljs-meta">@Field(desc = &quot;原始页面&quot;)</span>
+        <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-type">String</span> <span class="hljs-variable">rawpage</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;rawpage&quot;</span>;
+        <span class="hljs-meta">@Field(desc = &quot;种子&quot;)</span>
+        <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-type">String</span> <span class="hljs-variable">seed</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;seed&quot;</span>;
+    }
+
 </code></pre>
       </div>
     </div>
